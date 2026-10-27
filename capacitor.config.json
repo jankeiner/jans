@@ -1,0 +1,7 @@
+{
+  "appId": "com.jans.music",
+  "appName": "Jan’s",
+  "webDir": "www",
+  "backgroundColor": "#000000",
+  "server": { "androidScheme": "https" }
+}
