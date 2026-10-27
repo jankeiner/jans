@@ -1,0 +1,55 @@
+name: Build Jan's Android APK
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+      - run: npm install
+      - run: npm run build
+      - run: npx cap add android
+      - name: Install Jan's native media scanner
+        shell: bash
+        run: |
+          mkdir -p android/app/src/main/java/com/jans/music
+          cp android-plugin/JansMediaPlugin.java android/app/src/main/java/com/jans/music/JansMediaPlugin.java
+          python3 - <<'PY'
+          from pathlib import Path
+          main = Path('android/app/src/main/java/com/jans/music/MainActivity.java')
+          s = main.read_text()
+          s = s.replace('import com.getcapacitor.BridgeActivity;', 'import android.os.Bundle;\nimport com.getcapacitor.BridgeActivity;')
+          s = s.replace('public class MainActivity extends BridgeActivity {', '''public class MainActivity extends BridgeActivity {
+              @Override
+              public void onCreate(Bundle savedInstanceState) {
+                  registerPlugin(JansMediaPlugin.class);
+                  super.onCreate(savedInstanceState);
+              }''')
+          main.write_text(s)
+          manifest = Path('android/app/src/main/AndroidManifest.xml')
+          m = manifest.read_text()
+          permissions = '''    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO" />
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" android:maxSdkVersion="32" />
+'''
+          if 'android.permission.READ_MEDIA_AUDIO' not in m:
+              m = m.replace('<application', permissions + '    <application', 1)
+          manifest.write_text(m)
+          PY
+      - run: npx cap sync android
+      - run: cd android && chmod +x gradlew && ./gradlew assembleDebug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: jans-debug-apk
+          path: android/app/build/outputs/apk/debug/app-debug.apk

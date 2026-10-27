@@ -1,11 +1,19 @@
 {
-  "name": "jans-music",
-  "version": "1.0.0",
+  "name": "jans-music-player",
+  "version": "1.1.0",
   "private": true,
-  "description": "Jan’s - Vibra con la música",
+  "description": "Jan’s — reproductor de música local para Android",
+  "scripts": {
+    "build": "node scripts/build-assets.js",
+    "cap:sync": "cap sync android",
+    "cap:open": "cap open android"
+  },
   "dependencies": {
-    "@capacitor/android": "^6.2.0",
-    "@capacitor/cli": "^6.2.0",
-    "@capacitor/core": "^6.2.0"
+    "@capacitor/android": "^7.4.3",
+    "@capacitor/core": "^7.4.3",
+    "jsmediatags": "^3.9.7"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^7.4.3"
   }
 }
